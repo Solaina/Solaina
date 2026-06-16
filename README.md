@@ -21,8 +21,21 @@ stays in sync.
 
 The app code is complete and passes `flutter analyze` and `flutter test`.
 It is **not yet wired to a real Firebase project** — `lib/firebase_options.dart`
-currently has placeholder values. You need to plug in your own free Firebase
-project before the app can actually sync data between phones.
+currently has placeholder values.
+
+**You don't need Firebase to try the app.** When it detects placeholder
+credentials, it automatically runs in **local demo mode**: accounts,
+households, expenses, groceries, and chores are all stored on-device
+(via `shared_preferences`) instead of in Firestore, so sign-up/login and
+every feature work immediately after installing the APK. The login screen
+shows a small notice when this mode is active.
+
+The trade-off: local mode does **not sync between phones** — each device
+has its own separate data, so a "shared household" only really works if
+everyone uses the same phone, or you're just testing the app solo. To get
+the real multi-phone sync the app is designed for, plug in your own free
+Firebase project (steps below); once `lib/firebase_options.dart` has real
+values, the app automatically switches to Firebase and drops local mode.
 
 ## One-time setup (you only need to do this once)
 

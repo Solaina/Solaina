@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -7,12 +6,19 @@ import 'models/app_user.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/household_setup_screen.dart';
 import 'screens/home_shell.dart';
+import 'services/app_mode.dart';
 import 'services/auth_service.dart';
+import 'services/local_store.dart';
 import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  AppMode.useLocal = !DefaultFirebaseOptions.isConfigured;
+  if (AppMode.useLocal) {
+    await LocalStore.instance.init();
+  } else {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
   runApp(const SolainaApp());
 }
 
@@ -35,18 +41,18 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = AuthService();
-    return StreamBuilder<User?>(
+    return StreamBuilder<String?>(
       stream: authService.authStateChanges,
       builder: (context, authSnapshot) {
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return const _LoadingScreen();
         }
-        final user = authSnapshot.data;
-        if (user == null) {
+        final userId = authSnapshot.data;
+        if (userId == null) {
           return const LoginScreen();
         }
         return StreamBuilder<AppUser?>(
-          stream: authService.watchAppUser(user.uid),
+          stream: authService.watchAppUser(userId),
           builder: (context, userSnapshot) {
             if (userSnapshot.connectionState == ConnectionState.waiting) {
               return const _LoadingScreen();

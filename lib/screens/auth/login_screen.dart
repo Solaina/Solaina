@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/app_mode.dart';
 import '../../services/auth_service.dart';
 import 'signup_screen.dart';
 
@@ -39,6 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = e.message ?? 'Failed to sign in.');
+    } catch (e) {
+      setState(() => _errorMessage = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -68,6 +71,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
+                  if (AppMode.useLocal) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Local demo mode: no Firebase project configured yet, '
+                      'so data stays on this device only and will not sync '
+                      'with other phones. See README.md to connect a real '
+                      'project.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _emailController,

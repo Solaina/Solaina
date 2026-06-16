@@ -3,9 +3,11 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/household.dart';
+import 'app_mode.dart';
+import 'local_store.dart';
 
 class HouseholdService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   String _generateInviteCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -18,6 +20,13 @@ class HouseholdService {
     required String userId,
     required String displayName,
   }) async {
+    if (AppMode.useLocal) {
+      return LocalStore.instance.createHousehold(
+        name: name,
+        userId: userId,
+        displayName: displayName,
+      );
+    }
     final docRef = _db.collection('households').doc();
     await docRef.set(
       Household(
@@ -39,6 +48,13 @@ class HouseholdService {
     required String userId,
     required String displayName,
   }) async {
+    if (AppMode.useLocal) {
+      return LocalStore.instance.joinHousehold(
+        inviteCode: inviteCode,
+        userId: userId,
+        displayName: displayName,
+      );
+    }
     final query = await _db
         .collection('households')
         .where('inviteCode', isEqualTo: inviteCode.toUpperCase())
@@ -59,6 +75,12 @@ class HouseholdService {
   }
 
   Stream<Household> watchHousehold(String householdId) {
+    if (AppMode.useLocal) {
+      return LocalStore.instance
+          .watchHousehold(householdId)
+          .where((data) => data != null)
+          .map((data) => Household.fromMap(householdId, data!));
+    }
     return _db
         .collection('households')
         .doc(householdId)
@@ -67,6 +89,13 @@ class HouseholdService {
   }
 
   Stream<List<HouseholdMember>> watchMembers(String householdId) {
+    if (AppMode.useLocal) {
+      return LocalStore.instance.watchMembers(householdId).map(
+        (members) => members
+            .map((m) => HouseholdMember.fromMap(m['id'] as String, m))
+            .toList(),
+      );
+    }
     return _db
         .collection('households')
         .doc(householdId)

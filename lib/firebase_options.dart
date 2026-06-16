@@ -9,6 +9,20 @@ import 'package:flutter/foundation.dart'
 /// ones from your own project (see README.md for setup steps) before
 /// shipping a build that needs to actually sync data.
 class DefaultFirebaseOptions {
+  /// True once the placeholder values below have been replaced with a real
+  /// project's config (e.g. via `flutterfire configure`). When false, the
+  /// app falls back to an on-device local store instead of Firebase.
+  static bool get isConfigured {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return android.apiKey != 'REPLACE_WITH_YOUR_API_KEY';
+      case TargetPlatform.iOS:
+        return ios.apiKey != 'REPLACE_WITH_YOUR_API_KEY';
+      default:
+        return false;
+    }
+  }
+
   static FirebaseOptions get currentPlatform {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:

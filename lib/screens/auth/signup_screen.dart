@@ -42,6 +42,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (mounted) Navigator.of(context).pop();
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = e.message ?? 'Failed to sign up.');
+    } catch (e) {
+      setState(() => _errorMessage = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
