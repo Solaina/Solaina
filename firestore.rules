@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isHouseholdMember(householdId) {
+      return isSignedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/households/$(householdId)).data.memberIds;
+    }
+
+    match /users/{userId} {
+      allow read, update: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /households/{householdId} {
+      // Any signed-in user may read household metadata (name/inviteCode/
+      // memberIds) so they can look themselves up via an invite code before
+      // becoming a member. Sensitive data lives in the subcollections below,
+      // which stay restricted to members only.
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isHouseholdMember(householdId) ||
+        (isSignedIn() && request.resource.data.memberIds.hasAll(resource.data.memberIds));
+
+      match /members/{memberId} {
+        allow read: if isHouseholdMember(householdId);
+        allow write: if isSignedIn() && request.auth.uid == memberId;
+      }
+
+      match /expenses/{expenseId} {
+        allow read, write: if isHouseholdMember(householdId);
+      }
+
+      match /groceryItems/{itemId} {
+        allow read, write: if isHouseholdMember(householdId);
+      }
+
+      match /chores/{choreId} {
+        allow read, write: if isHouseholdMember(householdId);
+      }
+    }
+  }
+}
